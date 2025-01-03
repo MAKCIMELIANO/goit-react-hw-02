@@ -20,7 +20,9 @@ export default function Feedback({ good, neutral, bad, total, positive }) {
           <FaFrown className={clsx(css.icon, css.bad)} />
         </li>
         <li className={css.feedbackItem}>Total: {total}</li>
-        <li className={css.feedbackItem}>Positive: {positive}%</li>
+        <li className={clsx(css.feedbackItem, css.good)}>
+          Positive: {positive}%
+        </li>
       </ul>
     </div>
   );
