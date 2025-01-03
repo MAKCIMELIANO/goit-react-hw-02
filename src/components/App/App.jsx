@@ -7,43 +7,36 @@ import Notification from '../Notification/Notification';
 import './App.css';
 
 export default function App({ title }) {
-  const [good, setGood] = useState(() => {
-    const savedGood = localStorage.getItem('good');
-    return savedGood !== null ? parseInt(savedGood) : 0;
+  const [feedback, setFeedback] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedFeedback = localStorage.getItem('feedback');
+      return savedFeedback
+        ? JSON.parse(savedFeedback)
+        : { good: 0, neutral: 0, bad: 0 };
+    }
+    return { good: 0, neutral: 0, bad: 0 };
   });
 
-  const [neutral, setNeutral] = useState(() => {
-    const savedNeutral = localStorage.getItem('neutral');
-    return savedNeutral !== null ? parseInt(savedNeutral) : 0;
-  });
-
-  const [bad, setBad] = useState(() => {
-    const savedBad = localStorage.getItem('bad');
-    return savedBad !== null ? parseInt(savedBad) : 0;
-  });
-
-  const [positive, setPositive] = useState(0);
-
-  const totalFeedback = good + neutral + bad;
+  const totalFeedback = feedback.good + feedback.neutral + feedback.bad;
+  const positive =
+    totalFeedback > 0 ? Math.round((feedback.good / totalFeedback) * 100) : 0;
 
   const handleFeedback = type => {
     switch (type) {
       case 'good':
-        setGood(good + 1);
+        setFeedback(prev => ({ ...prev, good: prev.good + 1 }));
         break;
       case 'neutral':
-        setNeutral(neutral + 1);
+        setFeedback(prev => ({ ...prev, neutral: prev.neutral + 1 }));
         break;
       case 'bad':
-        setBad(bad + 1);
+        setFeedback(prev => ({ ...prev, bad: prev.bad + 1 }));
         break;
       case 'reset':
-        setGood(0);
-        setNeutral(0);
-        setBad(0);
-        localStorage.removeItem('good');
-        localStorage.removeItem('neutral');
-        localStorage.removeItem('bad');
+        setFeedback({ good: 0, neutral: 0, bad: 0 });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('feedback');
+        }
         break;
       default:
         console.error(`Unknown feedback type: ${type}`);
@@ -51,24 +44,10 @@ export default function App({ title }) {
   };
 
   useEffect(() => {
-    if (totalFeedback > 0) {
-      setPositive(Math.round((good / totalFeedback) * 100));
-    } else {
-      setPositive(0);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('feedback', JSON.stringify(feedback));
     }
-  }, [good, neutral, bad, totalFeedback]);
-
-  useEffect(() => {
-    localStorage.setItem('good', good);
-  }, [good]);
-
-  useEffect(() => {
-    localStorage.setItem('neutral', neutral);
-  }, [neutral]);
-
-  useEffect(() => {
-    localStorage.setItem('bad', bad);
-  }, [bad]);
+  }, [feedback]);
 
   return (
     <div>
@@ -80,9 +59,9 @@ export default function App({ title }) {
       <Options onFeedback={handleFeedback} totalFeedback={totalFeedback} />
       {totalFeedback > 0 ? (
         <Feedback
-          good={good}
-          neutral={neutral}
-          bad={bad}
+          good={feedback.good}
+          neutral={feedback.neutral}
+          bad={feedback.bad}
           total={totalFeedback}
           positive={positive}
         />
